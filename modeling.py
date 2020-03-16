@@ -6,13 +6,16 @@ from scipy.optimize import curve_fit
 from scipy.optimize import fsolve
 import matplotlib.pyplot as plt
 from IPython import get_ipython
+import requests
+import io
+
 ipy = get_ipython()
 if ipy is not None:
     ipy.run_line_magic('matplotlib', 'inline')
-# %matplotlib inline
-# exec(%matplotlib inline)
 
-df = pd.read_csv('covid-19-031520.csv')
+url = 'https://raw.githubusercontent.com/cepulmano/covid-modeling/master/covid-19-031520.csv'
+request = requests.get(url=url, verify=False).content 
+df = pd.read_csv(io.StringIO(request.decode('utf8')))
 
 def logistic_model(x,a,b,c):
     return c/(1+np.exp(-(x-b)/a))
@@ -26,9 +29,7 @@ a = fit[0][0] # a refers to the infection speed
 b = fit[0][1] # b is the day with the maximum infections occurred
 c = fit[0][2] # c is the total number of recorded infected people at the infection’s end
 
-
 errors = [np.sqrt(fit[1][i][i]) for i in [0,1,2]]
-
 
 sol = int(fsolve(lambda x : logistic_model(x,a,b,c) - int(c),b))
 
