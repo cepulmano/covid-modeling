@@ -5,7 +5,7 @@
 
 # ### Importing the needed libraries
 
-# In[7]:
+# In[1]:
 
 
 import pandas as pd
@@ -27,17 +27,19 @@ if ipy is not None:
 
 # ### Getting the cumulative count dataset
 
-# In[8]:
+# In[2]:
 
 
-url = 'http://raw.githubusercontent.com/cepulmano/covid-modeling/master/covid-19-031520.csv'
+url = 'http://raw.githubusercontent.com/cepulmano/covid-modeling/master/covid-19.csv'
 request = requests.get(url=url, verify=False).content 
 df = pd.read_csv(io.StringIO(request.decode('utf8')))
+
+df = df.drop([76,77])
 
 
 # ### Defining the logistic and exponential model equations
 
-# In[9]:
+# In[3]:
 
 
 def logistic_model(x,a,b,c):
@@ -49,7 +51,7 @@ def exponential_model(x,a,b,c):
 
 # ### Running the logistic and exponential models
 
-# In[10]:
+# In[4]:
 
 
 x = list(df.iloc[:,0])
@@ -64,21 +66,29 @@ errors = [np.sqrt(fit[1][i][i]) for i in [0,1,2]]
 
 sol = int(fsolve(lambda x : logistic_model(x,a,b,c) - int(c),b))
 
-print("Infection speed: {0}".format(a))
-print("Day with maximum infections occured: {0}".format(b))
-print("Total number of record infected people at the infection's end: {0}".format(c))
+print("Infection speed: {0} +/- {1}".format(a,errors[0]))
+print("Day with maximum infections occured: {0} +/- {1}".format(b,errors[1]))
+print("Total number of infected people at the infection's end: {0} +/- {1}".format(c,errors[2]))
 print("End of infection in Day #: {0}".format(sol))
 
 
-# In[11]:
+# In[5]:
 
 
 exp_fit = curve_fit(exponential_model,x,y,p0=[1,1,1], maxfev=5000)
 
+exp_a = exp_fit[0][0]
+exp_b = exp_fit[0][1]
+exp_c = exp_fit[0][2]
+
+exp_errors = [np.sqrt(exp_fit[1][i][i]) for i in [0,1,2]]
+
+print("Infection speed: {0} +/- {1}".format(exp_a,exp_errors[0]))
+
 
 # ### Plotting the model outputs
 
-# In[12]:
+# In[6]:
 
 
 pred_x = list(range(max(x),sol))
